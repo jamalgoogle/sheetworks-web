@@ -1,0 +1,1946 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Sheetworks</title>
+  <link
+  rel="icon"
+  type="image/svg+xml"
+  href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23107C41'/%3E%3Cpath d='M13 16h19v32H13z' fill='%231B9D59'/%3E%3Cpath d='M21 23l9 18M30 23l-9 18' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3Cpath d='M35 18h17v28H35z' fill='white' opacity='.9'/%3E%3Cpath d='M38 25h11M38 31h11M38 37h11M43.5 21v22' stroke='%23107C41' stroke-width='2'/%3E%3C/svg%3E"
+/>
+  <style>
+    :root {
+      --ink: #171B21;
+      --ink-soft: #5B6470;
+      --line: #DEE2E7;
+      --line-strong: #C6CBD2;
+      --chrome-bg: #F4F5F7;
+      --chrome-dark: #1B222C;
+      --surface: #FFFFFF;
+      --header-bg: #F0F2F5;
+      --header-bg-active: #DCE8FD;
+      --accent: #2F6FED;
+      --accent-dim: #DCE8FD;
+      --accent-line: #2F6FED;
+      --danger: #D14343;
+      --font-ui: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      font-family: var(--font-ui);
+      color: var(--ink);
+      background: var(--chrome-bg);
+      font-size: 13px;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      min-height: 520px;
+    }
+
+    /* ---------- Title strip ---------- */
+    .titlebar {
+      background: var(--chrome-dark);
+      color: #E8EBEF;
+      display: flex;
+      align-items: center;
+      padding: 6px 12px;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .titlebar .logo {
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      background: linear-gradient(160deg, #4C8CFF, #2350B8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 12px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .titlebar input.docname {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #fff;
+      font-size: 13.5px;
+      font-weight: 500;
+      padding: 3px 6px;
+      border-radius: 4px;
+      max-width: 260px;
+    }
+
+    .titlebar input.docname:hover {
+      border-color: #3A4351;
+    }
+
+    .titlebar input.docname:focus {
+      outline: none;
+      border-color: #4C8CFF;
+      background: #252E3B;
+    }
+
+    .titlebar .status {
+      font-size: 11.5px;
+      color: #8B93A1;
+      margin-left: 2px;
+      flex-shrink: 0;
+    }
+
+    .titlebar .spacer {
+      flex: 1;
+    }
+
+    .titlebar .tb-btn {
+      background: #2A3341;
+      color: #DCE1E8;
+      border: 1px solid #3A4351;
+      padding: 5px 11px;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .titlebar .tb-btn:hover {
+      background: #354056;
+    }
+
+    .titlebar .tb-btn.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .titlebar .tb-btn.primary:hover {
+      background: #4C82F0;
+    }
+
+    /* ---------- Menu bar ---------- */
+    .menubar {
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      padding: 0 8px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 30;
+    }
+
+    .menu-item {
+      padding: 7px 11px;
+      font-size: 12.5px;
+      cursor: pointer;
+      color: var(--ink);
+      border-radius: 4px;
+      margin: 3px 1px;
+      user-select: none;
+    }
+
+    .menu-item:hover,
+    .menu-item.open {
+      background: var(--header-bg);
+    }
+
+    .menu-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: var(--surface);
+      border: 1px solid var(--line-strong);
+      border-radius: 6px;
+      box-shadow: 0 8px 24px rgba(20, 25, 35, .14);
+      min-width: 220px;
+      padding: 5px;
+      display: none;
+      z-index: 40;
+    }
+
+    .menu-dropdown.show {
+      display: block;
+    }
+
+    .menu-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 7px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12.5px;
+      color: var(--ink);
+    }
+
+    .menu-row:hover {
+      background: var(--accent-dim);
+    }
+
+    .menu-row .shortcut {
+      color: var(--ink-soft);
+      font-size: 11px;
+    }
+
+    .menu-sep {
+      height: 1px;
+      background: var(--line);
+      margin: 5px 4px;
+    }
+
+    .menu-row.disabled {
+      color: #B7BCC4;
+      cursor: default;
+    }
+
+    .menu-row.disabled:hover {
+      background: none;
+    }
+
+    /* ---------- Toolbar (ribbon) ---------- */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      padding: 5px 8px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .tgroup {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 0 6px;
+      border-right: 1px solid var(--line);
+    }
+
+    .tgroup:last-child {
+      border-right: none;
+    }
+
+    .ibtn {
+      width: 28px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--ink);
+    }
+
+    .ibtn svg {
+      width: 15px;
+      height: 15px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.7;
+    }
+
+    .ibtn.textbtn {
+      width: auto;
+      padding: 0 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    .ibtn:hover {
+      background: var(--header-bg);
+    }
+
+    .ibtn.active {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-color: #B9D3FB;
+    }
+
+    select.tsel,
+    input.tcolor {
+      height: 26px;
+      border: 1px solid var(--line-strong);
+      border-radius: 4px;
+      background: var(--surface);
+      font-size: 12px;
+      color: var(--ink);
+      padding: 0 4px;
+    }
+
+    select.tsel:hover {
+      border-color: var(--ink-soft);
+    }
+
+    #fontFamily {
+      width: 118px;
+    }
+
+    #fontSize {
+      width: 52px;
+    }
+
+    #numFmt {
+      width: 108px;
+    }
+
+    .colorwrap {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .colorwrap .swatch {
+      width: 16px;
+      height: 3px;
+      border-radius: 1px;
+      margin-top: -3px;
+    }
+
+    input.tcolor {
+      width: 26px;
+      height: 26px;
+      padding: 1px;
+      cursor: pointer;
+    }
+
+    /* ---------- Formula bar ---------- */
+    .formulabar {
+      display: flex;
+      align-items: stretch;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      flex-shrink: 0;
+    }
+
+    #nameBox {
+      width: 88px;
+      border: none;
+      border-right: 1px solid var(--line);
+      padding: 0 10px;
+      font-size: 12.5px;
+      font-family: var(--font-mono);
+      color: var(--ink);
+      text-align: left;
+    }
+
+    #nameBox:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    .fx-label {
+      width: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-soft);
+      font-style: italic;
+      font-family: Georgia, serif;
+      font-size: 14px;
+      border-right: 1px solid var(--line);
+    }
+
+    #formulaInput {
+      flex: 1;
+      border: none;
+      padding: 0 10px;
+      font-size: 13px;
+      font-family: var(--font-mono);
+      color: var(--ink);
+    }
+
+    #formulaInput:focus {
+      outline: none;
+      background: #FBFCFE;
+    }
+
+    /* ---------- Grid ---------- */
+    .gridwrap {
+      flex: 1;
+      overflow: auto;
+      position: relative;
+      background: var(--surface);
+    }
+
+    .grid {
+      display: grid;
+      position: relative;
+    }
+
+    .corner {
+      position: sticky;
+      top: 0;
+      left: 0;
+      z-index: 22;
+      background: var(--header-bg);
+      border-right: 1px solid var(--line-strong);
+      border-bottom: 1px solid var(--line-strong);
+      cursor: pointer;
+    }
+
+    .colhead {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: var(--header-bg);
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11.5px;
+      color: var(--ink-soft);
+      font-weight: 600;
+      user-select: none;
+      position: relative;
+    }
+
+    .colhead.sel {
+      background: var(--header-bg-active);
+      color: var(--accent);
+    }
+
+    .colhead .rsz {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      cursor: col-resize;
+    }
+
+    .rowhead {
+      position: sticky;
+      left: 0;
+      z-index: 20;
+      background: var(--header-bg);
+      border-right: 1px solid var(--line-strong);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11.5px;
+      color: var(--ink-soft);
+      font-weight: 600;
+      user-select: none;
+      position: relative;
+    }
+
+    .rowhead.sel {
+      background: var(--header-bg-active);
+      color: var(--accent);
+    }
+
+    .rowhead .rsz {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 5px;
+      cursor: row-resize;
+    }
+
+    .cell {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+      padding: 0 5px;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      white-space: nowrap;
+      font-size: 12.5px;
+      color: var(--ink);
+      position: relative;
+      cursor: cell;
+    }
+
+    .cell.err {
+      color: var(--danger);
+    }
+
+    .cell.num {
+      justify-content: flex-end;
+    }
+
+    .cell.center {
+      justify-content: center;
+    }
+
+    .cell.selected-range {
+      background: var(--accent-dim);
+    }
+
+    .cell.active-cell {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+      background: var(--surface);
+      z-index: 5;
+    }
+
+    .fillhandle {
+      position: absolute;
+      width: 7px;
+      height: 7px;
+      background: var(--accent);
+      border: 1px solid #fff;
+      right: -4px;
+      bottom: -4px;
+      cursor: crosshair;
+      z-index: 6;
+    }
+
+    #cellEditor {
+      position: absolute;
+      border: 2px solid var(--accent);
+      background: #fff;
+      padding: 0 4px;
+      font-size: 12.5px;
+      font-family: var(--font-ui);
+      color: var(--ink);
+      z-index: 15;
+      display: none;
+      outline: none;
+      min-width: 40px;
+    }
+
+    /* ---------- Sheet tabs / status bar ---------- */
+    .statusbar {
+      display: flex;
+      align-items: center;
+      background: var(--surface);
+      border-top: 1px solid var(--line);
+      flex-shrink: 0;
+      padding: 0 6px;
+    }
+
+    .sheettabs {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      overflow-x: auto;
+      padding: 4px 2px;
+      flex: 1;
+    }
+
+    .sheettab {
+      padding: 5px 14px;
+      font-size: 12px;
+      border-radius: 5px 5px 0 0;
+      cursor: pointer;
+      color: var(--ink-soft);
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .sheettab.active {
+      background: var(--header-bg);
+      color: var(--ink);
+      font-weight: 600;
+      border-color: var(--line);
+    }
+
+    .addsheet {
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      border: none;
+      background: transparent;
+      color: var(--ink-soft);
+      font-size: 16px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .addsheet:hover {
+      background: var(--header-bg);
+    }
+
+    .summary {
+      display: flex;
+      gap: 16px;
+      padding: 0 14px;
+      font-size: 11.5px;
+      color: var(--ink-soft);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .summary b {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    ::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--chrome-bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #C6CBD2;
+      border-radius: 7px;
+      border: 3px solid var(--chrome-bg);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #AEB4BD;
+    }
+
+    input[type=file] {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app">
+
+    <div class="titlebar">
+      <div class="logo">S</div>
+      <input class="docname" id="docName" value="Untitled workbook">
+      <span class="status" id="saveStatus">All changes saved</span>
+      <div class="spacer"></div>
+      <button class="tb-btn" id="btnImport">Import CSV</button>
+      <button class="tb-btn" id="btnExport">Export CSV</button>
+      <button class="tb-btn primary" id="btnSave">Save</button>
+    </div>
+
+    <div class="menubar" id="menubar">
+      <div class="menu-item" data-menu="file">File</div>
+      <div class="menu-item" data-menu="edit">Edit</div>
+      <div class="menu-item" data-menu="insert">Insert</div>
+      <div class="menu-item" data-menu="format">Format</div>
+      <div class="menu-item" data-menu="data">Data</div>
+      <div class="menu-item" data-menu="help">Help</div>
+    </div>
+
+    <div class="toolbar" id="toolbar">
+      <div class="tgroup">
+        <button class="ibtn" id="btnUndo" title="Undo (Ctrl+Z)"><svg viewBox="0 0 24 24">
+            <path d="M9 7 3 12l6 5" />
+            <path d="M3 12h11a6 6 0 0 1 0 12h-1" />
+          </svg></button>
+        <button class="ibtn" id="btnRedo" title="Redo (Ctrl+Y)"><svg viewBox="0 0 24 24">
+            <path d="M15 7l6 5-6 5" />
+            <path d="M21 12H10a6 6 0 0 0 0 12h1" />
+          </svg></button>
+      </div>
+      <div class="tgroup">
+        <select class="tsel" id="fontFamily" title="Font">
+          <option>Arial</option>
+          <option>Georgia</option>
+          <option>Verdana</option>
+          <option selected>Segoe UI</option>
+          <option>Courier New</option>
+          <option>Tahoma</option>
+        </select>
+        <select class="tsel" id="fontSize" title="Font size">
+          <option>9</option>
+          <option>10</option>
+          <option selected>12</option>
+          <option>14</option>
+          <option>16</option>
+          <option>20</option>
+          <option>28</option>
+        </select>
+      </div>
+      <div class="tgroup">
+        <button class="ibtn textbtn" id="btnBold" title="Bold (Ctrl+B)">B</button>
+        <button class="ibtn textbtn" id="btnItalic" title="Italic (Ctrl+I)" style="font-style:italic;">I</button>
+        <button class="ibtn textbtn" id="btnUnderline" title="Underline (Ctrl+U)"
+          style="text-decoration:underline;">U</button>
+        <div class="colorwrap" title="Text color">
+          <span style="font-weight:700;font-size:12px;pointer-events:none;">A</span>
+          <input type="color" class="tcolor" id="textColor" value="#171b21"
+            style="width:16px;height:6px;padding:0;border:none;margin-top:-2px;">
+        </div>
+        <div class="colorwrap" title="Fill color">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"
+            style="pointer-events:none;">
+            <path d="M19 11l-8-8-8.5 8.5a2 2 0 0 0 0 2.9L9 22h6" />
+            <path d="M5 12h14" />
+            <path d="M17 15c0 1.5 1.5 2 1.5 3.5A1.5 1.5 0 0 1 17 20a1.5 1.5 0 0 1-1.5-1.5C15.5 17 17 16.5 17 15z" />
+          </svg>
+          <input type="color" class="tcolor" id="fillColor" value="#ffffff"
+            style="width:16px;height:6px;padding:0;border:none;margin-top:-2px;">
+        </div>
+      </div>
+      <div class="tgroup">
+        <button class="ibtn" id="alignLeft" title="Align left"><svg viewBox="0 0 24 24">
+            <line x1="4" y1="6" x2="20" y2="6" />
+            <line x1="4" y1="12" x2="14" y2="12" />
+            <line x1="4" y1="18" x2="18" y2="18" />
+          </svg></button>
+        <button class="ibtn" id="alignCenter" title="Align center"><svg viewBox="0 0 24 24">
+            <line x1="4" y1="6" x2="20" y2="6" />
+            <line x1="7" y1="12" x2="17" y2="12" />
+            <line x1="5" y1="18" x2="19" y2="18" />
+          </svg></button>
+        <button class="ibtn" id="alignRight" title="Align right"><svg viewBox="0 0 24 24">
+            <line x1="4" y1="6" x2="20" y2="6" />
+            <line x1="10" y1="12" x2="20" y2="12" />
+            <line x1="6" y1="18" x2="20" y2="18" />
+          </svg></button>
+        <button class="ibtn" id="btnMerge" title="Merge cells"><svg viewBox="0 0 24 24">
+            <rect x="3" y="6" width="18" height="12" rx="1" />
+            <line x1="12" y1="6" x2="12" y2="18" stroke-dasharray="2 2" />
+          </svg></button>
+        <button class="ibtn" id="btnBorders" title="Toggle borders on selection"><svg viewBox="0 0 24 24">
+            <rect x="4" y="4" width="16" height="16" />
+            <line x1="4" y1="12" x2="20" y2="12" />
+            <line x1="12" y1="4" x2="12" y2="20" />
+          </svg></button>
+      </div>
+      <div class="tgroup">
+        <select class="tsel" id="numFmt" title="Number format">
+          <option value="general" selected>General</option>
+          <option value="number">Number (1.00)</option>
+          <option value="integer">Integer (1)</option>
+          <option value="percent">Percent (%)</option>
+          <option value="currency">Currency ($)</option>
+          <option value="date">Date</option>
+        </select>
+        <button class="ibtn textbtn" id="decDec" title="Decrease decimal">.0</button>
+        <button class="ibtn textbtn" id="incDec" title="Increase decimal">.00</button>
+      </div>
+      <div class="tgroup">
+        <button class="ibtn textbtn" id="insRow" title="Insert row above">+Row</button>
+        <button class="ibtn textbtn" id="insCol" title="Insert column left">+Col</button>
+        <button class="ibtn textbtn" id="delRow" title="Delete row(s)">-Row</button>
+        <button class="ibtn textbtn" id="delCol" title="Delete column(s)">-Col</button>
+      </div>
+      <div class="tgroup">
+        <button class="ibtn textbtn" id="sortAsc" title="Sort selected column A→Z">A→Z</button>
+        <button class="ibtn textbtn" id="sortDesc" title="Sort selected column Z→A">Z→A</button>
+      </div>
+    </div>
+
+    <div class="formulabar">
+      <input id="nameBox" value="A1" spellcheck="false">
+      <div class="fx-label">fx</div>
+      <input id="formulaInput" spellcheck="false" autocomplete="off" placeholder="">
+    </div>
+
+    <div class="gridwrap" id="gridwrap">
+      <div class="grid" id="grid"></div>
+      <input id="cellEditor" spellcheck="false" autocomplete="off">
+    </div>
+
+    <div class="statusbar">
+      <div class="sheettabs" id="sheettabs"></div>
+      <button class="addsheet" id="addSheet" title="Add sheet">+</button>
+      <div class="summary" id="summary">
+        <span>Sum: <b id="sumVal">0</b></span>
+        <span>Avg: <b id="avgVal">0</b></span>
+        <span>Count: <b id="countVal">0</b></span>
+      </div>
+    </div>
+
+  </div>
+
+  <input type="file" id="fileInput" accept=".csv">
+
+  <script>
+    (function () {
+      "use strict";
+
+      /* ============================================================
+         STATE
+      ============================================================ */
+      const DEFAULT_ROWS = 50, DEFAULT_COLS = 26;
+      let workbook = {
+        name: "Untitled workbook",
+        sheets: [makeSheet("Sheet1")],
+        active: 0
+      };
+      let dirty = false;
+
+      function makeSheet(name) {
+        return {
+          name,
+          numRows: DEFAULT_ROWS,
+          numCols: DEFAULT_COLS,
+          cells: {},          // "r_c" -> {raw, bold,italic,underline,align,color,bg,numFmt,fontFamily,fontSize}
+          colWidths: {},       // c -> px
+          rowHeights: {},      // r -> px
+          merges: []           // {r1,c1,r2,c2}
+        };
+      }
+      function curSheet() { return workbook.sheets[workbook.active]; }
+      function cellKey(r, c) { return r + "_" + c; }
+      function getCell(sheet, r, c, create) {
+        const k = cellKey(r, c);
+        let cell = sheet.cells[k];
+        if (!cell && create) { cell = sheet.cells[k] = { raw: "" }; }
+        return cell;
+      }
+      function colLetter(c) { // 0-based -> A, B, ... AA
+        let s = "";
+        c++;
+        while (c > 0) { let m = (c - 1) % 26; s = String.fromCharCode(65 + m) + s; c = Math.floor((c - 1) / 26); }
+        return s;
+      }
+      function refToRC(ref) {
+        const m = /^\$?([A-Z]+)\$?(\d+)$/.exec(ref.toUpperCase());
+        if (!m) return null;
+        let col = 0;
+        for (const ch of m[1]) col = col * 26 + (ch.charCodeAt(0) - 64);
+        return { r: parseInt(m[2], 10) - 1, c: col - 1 };
+      }
+      function rcToRef(r, c) { return colLetter(c) + (r + 1); }
+
+      /* Undo/redo: snapshot-based (simple, robust) */
+      let undoStack = [], redoStack = [];
+      function snapshot() { return JSON.stringify(workbook); }
+      function pushUndo() {
+        undoStack.push(snapshot());
+        if (undoStack.length > 60) undoStack.shift();
+        redoStack.length = 0;
+      }
+      function doUndo() {
+        if (!undoStack.length) return;
+        redoStack.push(snapshot());
+        workbook = JSON.parse(undoStack.pop());
+        clampSelectionToSheet();
+        fullRender();
+        markDirty();
+      }
+      function doRedo() {
+        if (!redoStack.length) return;
+        undoStack.push(snapshot());
+        workbook = JSON.parse(redoStack.pop());
+        clampSelectionToSheet();
+        fullRender();
+        markDirty();
+      }
+
+      /* ============================================================
+         FORMULA ENGINE
+      ============================================================ */
+      function tokenize(expr) {
+        const tokens = [];
+        let i = 0;
+        const n = expr.length;
+        while (i < n) {
+          const ch = expr[i];
+          if (/\s/.test(ch)) { i++; continue; }
+          if (ch === '"') {
+            let j = i + 1, s = "";
+            while (j < n && expr[j] !== '"') { s += expr[j]; j++; }
+            tokens.push({ t: 'STRING', v: s }); i = j + 1; continue;
+          }
+          if (/[0-9]/.test(ch) || (ch === '.' && /[0-9]/.test(expr[i + 1] || ""))) {
+            let j = i, s = "";
+            while (j < n && /[0-9.]/.test(expr[j])) { s += expr[j]; j++; }
+            tokens.push({ t: 'NUMBER', v: parseFloat(s) }); i = j; continue;
+          }
+          if (/[A-Za-z$]/.test(ch)) {
+            let j = i, s = "";
+            while (j < n && /[A-Za-z0-9_$]/.test(expr[j])) { s += expr[j]; j++; }
+            const clean = s.replace(/\$/g, '');
+            if (/^[A-Za-z]+[0-9]+$/.test(clean)) { tokens.push({ t: 'REF', v: clean.toUpperCase() }); }
+            else { tokens.push({ t: 'IDENT', v: clean.toUpperCase() }); }
+            i = j; continue;
+          }
+          if (ch === '<' || ch === '>') {
+            if (expr[i + 1] === '=') { tokens.push({ t: 'OP', v: ch + '=' }); i += 2; continue; }
+            if (ch === '<' && expr[i + 1] === '>') { tokens.push({ t: 'OP', v: '<>' }); i += 2; continue; }
+            tokens.push({ t: 'OP', v: ch }); i++; continue;
+          }
+          if ('+-*/^%(),:='.includes(ch)) { tokens.push({ t: 'OP', v: ch }); i++; continue; }
+          // unknown char, skip
+          i++;
+        }
+        return tokens;
+      }
+
+      function parseFormula(expr) {
+        const tokens = tokenize(expr);
+        let pos = 0;
+        function peek() { return tokens[pos]; }
+        function next() { return tokens[pos++]; }
+        function expectOp(v) { const t = next(); if (!t || t.t !== 'OP' || t.v !== v) throw new Error('#SYNTAX?'); }
+
+        function parseExpr() { return parseCompare(); }
+        function parseCompare() {
+          let left = parseAdd();
+          while (peek() && peek().t === 'OP' && ['=', '<>', '<', '>', '<=', '>='].includes(peek().v)) {
+            const op = next().v;
+            const right = parseAdd();
+            left = { type: 'binop', op, left, right };
+          }
+          return left;
+        }
+        function parseAdd() {
+          let left = parseMul();
+          while (peek() && peek().t === 'OP' && (peek().v === '+' || peek().v === '-')) {
+            const op = next().v;
+            const right = parseMul();
+            left = { type: 'binop', op, left, right };
+          }
+          return left;
+        }
+        function parseMul() {
+          let left = parsePow();
+          while (peek() && peek().t === 'OP' && (peek().v === '*' || peek().v === '/')) {
+            const op = next().v;
+            const right = parsePow();
+            left = { type: 'binop', op, left, right };
+          }
+          return left;
+        }
+        function parsePow() {
+          let left = parseUnary();
+          while (peek() && peek().t === 'OP' && peek().v === '^') {
+            next();
+            const right = parseUnary();
+            left = { type: 'binop', op: '^', left, right };
+          }
+          return left;
+        }
+        function parseUnary() {
+          if (peek() && peek().t === 'OP' && peek().v === '-') {
+            next();
+            return { type: 'neg', node: parseUnary() };
+          }
+          return parsePostfix();
+        }
+        function parsePostfix() {
+          let node = parsePrimary();
+          if (peek() && peek().t === 'OP' && peek().v === '%') {
+            next();
+            node = { type: 'pct', node };
+          }
+          return node;
+        }
+        function parsePrimary() {
+          const t = peek();
+          if (!t) throw new Error('#SYNTAX?');
+          if (t.t === 'NUMBER') { next(); return { type: 'num', v: t.v }; }
+          if (t.t === 'STRING') { next(); return { type: 'str', v: t.v }; }
+          if (t.t === 'OP' && t.v === '(') {
+            next();
+            const e = parseExpr();
+            expectOp(')');
+            return e;
+          }
+          if (t.t === 'REF') {
+            next();
+            if (peek() && peek().t === 'OP' && peek().v === ':') {
+              next();
+              const t2 = next();
+              if (!t2 || t2.t !== 'REF') throw new Error('#REF!');
+              return { type: 'range', from: t.v, to: t2.v };
+            }
+            return { type: 'ref', ref: t.v };
+          }
+          if (t.t === 'IDENT') {
+            next();
+            if (peek() && peek().t === 'OP' && peek().v === '(') {
+              next();
+              const args = [];
+              if (!(peek() && peek().t === 'OP' && peek().v === ')')) {
+                args.push(parseExpr());
+                while (peek() && peek().t === 'OP' && peek().v === ',') {
+                  next();
+                  args.push(parseExpr());
+                }
+              }
+              expectOp(')');
+              return { type: 'call', name: t.v, args };
+            }
+            // bare ident (e.g. TRUE/FALSE)
+            if (t.v === 'TRUE') return { type: 'bool', v: true };
+            if (t.v === 'FALSE') return { type: 'bool', v: false };
+            throw new Error('#NAME?');
+          }
+          throw new Error('#SYNTAX?');
+        }
+        const result = parseExpr();
+        if (pos < tokens.length) throw new Error('#SYNTAX?');
+        return result;
+      }
+
+      function iterRange(from, to, cb) {
+        const a = refToRC(from), b = refToRC(to);
+        if (!a || !b) throw new Error('#REF!');
+        const r1 = Math.min(a.r, b.r), r2 = Math.max(a.r, b.r);
+        const c1 = Math.min(a.c, b.c), c2 = Math.max(a.c, b.c);
+        for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) cb(r, c);
+      }
+
+      function flattenNums(vals) {
+        const out = [];
+        for (const v of vals) {
+          if (Array.isArray(v)) { out.push(...flattenNums(v)); }
+          else if (typeof v === 'number') { out.push(v); }
+          else if (typeof v === 'string' && v.trim() !== '' && !isNaN(parseFloat(v))) { out.push(parseFloat(v)); }
+        }
+        return out;
+      }
+      function flattenAll(vals) {
+        const out = [];
+        for (const v of vals) { if (Array.isArray(v)) out.push(...flattenAll(v)); else out.push(v); }
+        return out;
+      }
+
+      const FUNCS = {
+        SUM: (args) => flattenNums(args).reduce((a, b) => a + b, 0),
+        AVERAGE: (args) => { const n = flattenNums(args); return n.length ? n.reduce((a, b) => a + b, 0) / n.length : 0; },
+        MIN: (args) => { const n = flattenNums(args); return n.length ? Math.min(...n) : 0; },
+        MAX: (args) => { const n = flattenNums(args); return n.length ? Math.max(...n) : 0; },
+        COUNT: (args) => flattenNums(args).length,
+        COUNTA: (args) => flattenAll(args).filter(v => v !== "" && v !== null && v !== undefined).length,
+        MEDIAN: (args) => { const n = flattenNums(args).sort((a, b) => a - b); if (!n.length) return 0; const m = Math.floor(n.length / 2); return n.length % 2 ? n[m] : (n[m - 1] + n[m]) / 2; },
+        ROUND: (args) => { const [v, d = 0] = args; const f = Math.pow(10, d); return Math.round(v * f) / f; },
+        ABS: (args) => Math.abs(args[0]),
+        SQRT: (args) => Math.sqrt(args[0]),
+        POWER: (args) => Math.pow(args[0], args[1]),
+        MOD: (args) => args[0] % args[1],
+        PI: () => Math.PI,
+        IF: (args) => args[0] ? (args[1] !== undefined ? args[1] : true) : (args[2] !== undefined ? args[2] : false),
+        AND: (args) => flattenAll(args).every(v => !!v && v !== '0'),
+        OR: (args) => flattenAll(args).some(v => !!v && v !== '0'),
+        NOT: (args) => !args[0],
+        IFERROR: (args) => args[0],
+        CONCATENATE: (args) => flattenAll(args).map(v => String(v == null ? "" : v)).join(""),
+        LEN: (args) => String(args[0] == null ? "" : args[0]).length,
+        UPPER: (args) => String(args[0] == null ? "" : args[0]).toUpperCase(),
+        LOWER: (args) => String(args[0] == null ? "" : args[0]).toLowerCase(),
+        TRIM: (args) => String(args[0] == null ? "" : args[0]).trim(),
+        TODAY: () => new Date().toLocaleDateString(),
+        NOW: () => new Date().toLocaleString(),
+      };
+
+      function evalNode(node, sheet, visiting, memo) {
+        switch (node.type) {
+          case 'num': return node.v;
+          case 'str': return node.v;
+          case 'bool': return node.v;
+          case 'neg': return -toNum(evalNode(node.node, sheet, visiting, memo));
+          case 'pct': return toNum(evalNode(node.node, sheet, visiting, memo)) / 100;
+          case 'ref': {
+            const rc = refToRC(node.ref);
+            if (!rc) throw new Error('#REF!');
+            return evalCellValue(sheet, rc.r, rc.c, visiting, memo);
+          }
+          case 'range': {
+            const arr = [];
+            iterRange(node.from, node.to, (r, c) => arr.push(evalCellValue(sheet, r, c, visiting, memo)));
+            return arr;
+          }
+          case 'binop': {
+            const op = node.op;
+            const l = evalNode(node.left, sheet, visiting, memo);
+            const r = evalNode(node.right, sheet, visiting, memo);
+            if (op === '=') { return String(l) === String(r); }
+            if (op === '<>') { return String(l) !== String(r); }
+            if (['<', '>', '<=', '>='].includes(op)) {
+              const ln = toNum(l), rn = toNum(r);
+              if (op === '<') return ln < rn; if (op === '>') return ln > rn;
+              if (op === '<=') return ln <= rn; return ln >= rn;
+            }
+            const ln = toNum(l), rn = toNum(r);
+            if (op === '+') return ln + rn;
+            if (op === '-') return ln - rn;
+            if (op === '*') return ln * rn;
+            if (op === '/') { if (rn === 0) throw new Error('#DIV/0!'); return ln / rn; }
+            if (op === '^') return Math.pow(ln, rn);
+            throw new Error('#SYNTAX?');
+          }
+          case 'call': {
+            const fn = FUNCS[node.name];
+            if (!fn) throw new Error('#NAME?');
+            const args = node.args.map(a => evalNode(a, sheet, visiting, memo));
+            return fn(args);
+          }
+        }
+        throw new Error('#ERROR!');
+      }
+      function toNum(v) {
+        if (typeof v === 'number') return v;
+        if (typeof v === 'boolean') return v ? 1 : 0;
+        if (v === "" || v == null) return 0;
+        const f = parseFloat(v);
+        if (isNaN(f)) throw new Error('#VALUE!');
+        return f;
+      }
+
+      function evalCellValue(sheet, r, c, visiting, memo) {
+        const key = cellKey(r, c);
+        if (memo.has(key)) return memo.get(key);
+        if (visiting.has(key)) throw new Error('#CIRCULAR!');
+        const cell = sheet.cells[key];
+        let value;
+        if (!cell || cell.raw === "" || cell.raw == null) {
+          value = "";
+        } else if (String(cell.raw)[0] === '=') {
+          visiting.add(key);
+          try {
+            const ast = parseFormula(String(cell.raw).slice(1));
+            value = evalNode(ast, sheet, visiting, memo);
+          } catch (e) {
+            value = { __error: (e && e.message) || '#ERROR!' };
+          }
+          visiting.delete(key);
+        } else {
+          const raw = String(cell.raw);
+          if (raw.trim() !== "" && !isNaN(Number(raw))) value = Number(raw);
+          else value = raw;
+        }
+        memo.set(key, value);
+        return value;
+      }
+
+      function recalcSheet(sheet) {
+        const visiting = new Set(), memo = new Map();
+        for (const key in sheet.cells) {
+          const [r, c] = key.split('_').map(Number);
+          const v = evalCellValue(sheet, r, c, visiting, memo);
+          sheet.cells[key].computed = v;
+        }
+      }
+
+      /* ============================================================
+         FORMATTING
+      ============================================================ */
+      function formatValue(cell, value) {
+        if (value && typeof value === 'object' && '__error' in value) {
+          return { text: value.__error, isError: true };
+        }
+        const fmt = cell && cell.numFmt;
+        if (typeof value === 'number' && fmt) {
+          if (fmt === 'number') return { text: value.toFixed(cell.decimals != null ? cell.decimals : 2), isNum: true };
+          if (fmt === 'integer') return { text: Math.round(value).toString(), isNum: true };
+          if (fmt === 'percent') return { text: (value * 100).toFixed(cell.decimals != null ? cell.decimals : 1) + '%', isNum: true };
+          if (fmt === 'currency') return { text: '$' + value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), isNum: true };
+          if (fmt === 'date') return { text: new Date((value - 25569) * 86400 * 1000).toLocaleDateString(), isNum: false };
+        }
+        if (typeof value === 'number') {
+          let s = String(value);
+          if (cell && cell.decimals != null) s = value.toFixed(cell.decimals);
+          return { text: s, isNum: true };
+        }
+        if (typeof value === 'boolean') return { text: value ? 'TRUE' : 'FALSE', isNum: false };
+        return { text: value == null ? '' : String(value), isNum: false };
+      }
+
+      /* ============================================================
+         SELECTION
+      ============================================================ */
+      let sel = { r1: 0, c1: 0, r2: 0, c2: 0 };  // range
+      let active = { r: 0, c: 0 };
+      let dragging = false, fillDragging = false;
+      let editing = false;
+
+      function clampSelectionToSheet() {
+        const s = curSheet();
+        sel.r1 = Math.min(sel.r1, s.numRows - 1); sel.r2 = Math.min(sel.r2, s.numRows - 1);
+        sel.c1 = Math.min(sel.c1, s.numCols - 1); sel.c2 = Math.min(sel.c2, s.numCols - 1);
+        active.r = Math.min(active.r, s.numRows - 1); active.c = Math.min(active.c, s.numCols - 1);
+      }
+      function selBounds() {
+        return { r1: Math.min(sel.r1, sel.r2), r2: Math.max(sel.r1, sel.r2), c1: Math.min(sel.c1, sel.c2), c2: Math.max(sel.c1, sel.c2) };
+      }
+      function setSelectionSingle(r, c) { sel = { r1: r, c1: c, r2: r, c2: c }; active = { r, c }; }
+
+      /* find merge that covers r,c */
+      function findMerge(sheet, r, c) {
+        return sheet.merges.find(m => r >= m.r1 && r <= m.r2 && c >= m.c1 && c <= m.c2);
+      }
+
+      /* ============================================================
+         RENDERING
+      ============================================================ */
+      const gridEl = document.getElementById('grid');
+      const gridwrapEl = document.getElementById('gridwrap');
+      const ROWHEAD_W = 44;
+      const DEFAULT_COLW = 92, DEFAULT_ROWH = 24, HEADER_H = 24;
+
+      function colW(sheet, c) { return sheet.colWidths[c] || DEFAULT_COLW; }
+      function rowH(sheet, r) { return sheet.rowHeights[r] || DEFAULT_ROWH; }
+
+      function fullRender() {
+        recalcSheet(curSheet());
+        renderGrid();
+        renderSheetTabs();
+        renderFormulaBar();
+        renderSummary();
+      }
+
+      function renderGrid() {
+        const sheet = curSheet();
+        const cols = sheet.numCols, rows = sheet.numRows;
+        let colTemplate = ROWHEAD_W + "px";
+        for (let c = 0; c < cols; c++) colTemplate += " " + colW(sheet, c) + "px";
+        let rowTemplate = HEADER_H + "px";
+        for (let r = 0; r < rows; r++) rowTemplate += " " + rowH(sheet, r) + "px";
+        gridEl.style.gridTemplateColumns = colTemplate;
+        gridEl.style.gridTemplateRows = rowTemplate;
+
+        const b = selBounds();
+        let html = "";
+        // corner
+        html += `<div class="corner" style="grid-column:1;grid-row:1;"></div>`;
+        // column headers
+        for (let c = 0; c < cols; c++) {
+          const isSel = c >= b.c1 && c <= b.c2;
+          html += `<div class="colhead ${isSel ? 'sel' : ''}" data-col="${c}" style="grid-column:${c + 2};grid-row:1;">${colLetter(c)}<div class="rsz" data-colrsz="${c}"></div></div>`;
+        }
+        // row headers
+        for (let r = 0; r < rows; r++) {
+          const isSel = r >= b.r1 && r <= b.r2;
+          html += `<div class="rowhead ${isSel ? 'sel' : ''}" data-row="${r}" style="grid-column:1;grid-row:${r + 2};">${r + 1}<div class="rsz" data-rowrsz="${r}"></div></div>`;
+        }
+        // cells
+        const hiddenByMerge = new Set();
+        sheet.merges.forEach(m => {
+          for (let r = m.r1; r <= m.r2; r++) for (let c = m.c1; c <= m.c2; c++) {
+            if (r === m.r1 && c === m.c1) return;
+            hiddenByMerge.add(cellKey(r, c));
+          }
+        });
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const key = cellKey(r, c);
+            if (hiddenByMerge.has(key)) continue;
+            const cell = sheet.cells[key];
+            const merge = sheet.merges.find(m => m.r1 === r && m.c1 === c);
+            let gridColStyle = `grid-column:${c + 2}${merge ? ' / span ' + (merge.c2 - merge.c1 + 1) : ''};`;
+            let gridRowStyle = `grid-row:${r + 2}${merge ? ' / span ' + (merge.r2 - merge.r1 + 1) : ''};`;
+            const disp = cell ? formatValue(cell, cell.computed) : { text: "" };
+            const isActive = (r === active.r && c === active.c);
+            const inSel = r >= b.r1 && r <= b.r2 && c >= b.c1 && c <= b.c2;
+            let cls = "cell";
+            if (inSel && !isActive) cls += " selected-range";
+            if (isActive) cls += " active-cell";
+            if (disp.isError) cls += " err";
+            const align = (cell && cell.align) || (disp.isNum ? 'right' : 'left');
+            if (align === 'right') cls += " num"; else if (align === 'center') cls += " center";
+            let style = gridColStyle + gridRowStyle;
+            if (cell) {
+              if (cell.bold) style += "font-weight:700;";
+              if (cell.italic) style += "font-style:italic;";
+              if (cell.underline) style += "text-decoration:underline;";
+              if (cell.color) style += "color:" + cell.color + ";";
+              if (cell.bg) style += "background:" + cell.bg + ";";
+              if (cell.fontFamily) style += "font-family:'" + cell.fontFamily + "',sans-serif;";
+              if (cell.fontSize) style += "font-size:" + cell.fontSize + "px;";
+              if (cell.border) style += "box-shadow: inset 0 0 0 1px #171B21;";
+            }
+            const showHandle = (isActive && r === b.r2 && c === b.c2);
+            html += `<div class="${cls}" data-r="${r}" data-c="${c}" style="${style}">${escapeHtml(disp.text)}${showHandle ? '<div class="fillhandle" id="fillhandle"></div>' : ''}</div>`;
+          }
+        }
+        gridEl.innerHTML = html;
+        bindGridEvents();
+      }
+      function escapeHtml(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      }
+
+      function renderSheetTabs() {
+        const el = document.getElementById('sheettabs');
+        el.innerHTML = workbook.sheets.map((s, i) =>
+          `<div class="sheettab ${i === workbook.active ? 'active' : ''}" data-idx="${i}">${escapeHtml(s.name)}</div>`
+        ).join("");
+        el.querySelectorAll('.sheettab').forEach(t => {
+          t.addEventListener('click', () => {
+            workbook.active = parseInt(t.dataset.idx, 10);
+            setSelectionSingle(0, 0);
+            fullRender();
+          });
+          t.addEventListener('dblclick', () => {
+            const idx = parseInt(t.dataset.idx, 10);
+            const name = prompt('Rename sheet', workbook.sheets[idx].name);
+            if (name) { pushUndo(); workbook.sheets[idx].name = name; renderSheetTabs(); markDirty(); }
+          });
+        });
+      }
+
+      function renderFormulaBar() {
+        const sheet = curSheet();
+        document.getElementById('nameBox').value = rcToRef(active.r, active.c);
+        const cell = getCell(sheet, active.r, active.c, false);
+        document.getElementById('formulaInput').value = cell ? (cell.raw || "") : "";
+      }
+
+      function renderSummary() {
+        const sheet = curSheet();
+        const b = selBounds();
+        const nums = [];
+        for (let r = b.r1; r <= b.r2; r++) for (let c = b.c1; c <= b.c2; c++) {
+          const cell = sheet.cells[cellKey(r, c)];
+          if (cell && typeof cell.computed === 'number') nums.push(cell.computed);
+        }
+        const sum = nums.reduce((a, b2) => a + b2, 0);
+        document.getElementById('sumVal').textContent = round2(sum);
+        document.getElementById('avgVal').textContent = nums.length ? round2(sum / nums.length) : 0;
+        document.getElementById('countVal').textContent = nums.length;
+      }
+      function round2(v) { return Math.round(v * 100) / 100; }
+
+      /* ============================================================
+         EDITING
+      ============================================================ */
+      const editorEl = document.getElementById('cellEditor');
+
+      function startEdit(r, c, initialChar) {
+        const sheet = curSheet();
+        active = { r, c }; sel = { r1: r, c1: c, r2: r, c2: c };
+        const cellDiv = gridEl.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+        if (!cellDiv) return;
+        const rect = cellDiv.getBoundingClientRect();
+        const wrapRect = gridwrapEl.getBoundingClientRect();
+        editorEl.style.left = (cellDiv.offsetLeft) + "px";
+        editorEl.style.top = (cellDiv.offsetTop) + "px";
+        editorEl.style.width = cellDiv.offsetWidth + "px";
+        editorEl.style.height = cellDiv.offsetHeight + "px";
+        editorEl.style.display = "block";
+        const cell = getCell(sheet, r, c, false);
+        editorEl.value = initialChar != null ? initialChar : (cell ? (cell.raw || "") : "");
+        editing = true;
+        editorEl.focus();
+        if (initialChar != null) {
+          editorEl.setSelectionRange(editorEl.value.length, editorEl.value.length);
+        } else {
+          editorEl.select();
+        }
+        document.getElementById('formulaInput').value = editorEl.value;
+      }
+      function commitEdit(moveDir) {
+        if (!editing) return;
+        const sheet = curSheet();
+        const { r, c } = active;
+        pushUndo();
+        const val = editorEl.value;
+        const cell = getCell(sheet, r, c, true);
+        cell.raw = val;
+        editorEl.style.display = "none";
+        editing = false;
+        markDirty();
+        if (moveDir === 'down') moveActive(1, 0);
+        else if (moveDir === 'right') moveActive(0, 1);
+        else if (moveDir === 'up') moveActive(-1, 0);
+        fullRender();
+      }
+      function cancelEdit() {
+        editorEl.style.display = "none";
+        editing = false;
+        fullRender();
+      }
+      editorEl.addEventListener('input', () => { document.getElementById('formulaInput').value = editorEl.value; });
+      editorEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); commitEdit('down'); }
+        else if (e.key === 'Tab') { e.preventDefault(); e.stopPropagation(); commitEdit('right'); }
+        else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cancelEdit(); }
+      });
+
+      function moveActive(dr, dc) {
+        const sheet = curSheet();
+        let r = Math.max(0, Math.min(sheet.numRows - 1, active.r + dr));
+        let c = Math.max(0, Math.min(sheet.numCols - 1, active.c + dc));
+        setSelectionSingle(r, c);
+      }
+
+      /* ============================================================
+         GRID EVENTS
+      ============================================================ */
+      function bindGridEvents() {
+        gridEl.querySelectorAll('.cell').forEach(el => {
+          el.addEventListener('mousedown', (e) => {
+            if (e.target.id === 'fillhandle') return;
+            const r = +el.dataset.r, c = +el.dataset.c;
+            if (editing) commitEdit();
+            dragging = true;
+            setSelectionSingle(r, c);
+            renderGrid(); renderFormulaBar(); renderSummary();
+          });
+          el.addEventListener('mouseenter', () => {
+            if (dragging) {
+              sel.r2 = +el.dataset.r; sel.c2 = +el.dataset.c;
+              renderGrid(); renderSummary();
+            } else if (fillDragging) {
+              fillTarget = { r: +el.dataset.r, c: +el.dataset.c };
+              renderGrid();
+            }
+          });
+          el.addEventListener('dblclick', () => {
+            startEdit(+el.dataset.r, +el.dataset.c);
+          });
+        });
+        const fh = document.getElementById('fillhandle');
+        if (fh) {
+          fh.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            fillDragging = true;
+            fillTarget = null;
+          });
+        }
+        gridEl.querySelectorAll('.colhead').forEach(el => {
+          el.addEventListener('click', (e) => {
+            if (e.target.dataset.colrsz !== undefined) return;
+            const c = +el.dataset.col;
+            const sheet = curSheet();
+            sel = { r1: 0, c1: c, r2: sheet.numRows - 1, c2: c };
+            active = { r: 0, c: c };
+            renderGrid(); renderFormulaBar(); renderSummary();
+          });
+        });
+        gridEl.querySelectorAll('.rowhead').forEach(el => {
+          el.addEventListener('click', (e) => {
+            if (e.target.dataset.rowrsz !== undefined) return;
+            const r = +el.dataset.row;
+            const sheet = curSheet();
+            sel = { r1: r, c1: 0, r2: r, c2: sheet.numCols - 1 };
+            active = { r: r, c: 0 };
+            renderGrid(); renderFormulaBar(); renderSummary();
+          });
+        });
+        document.querySelector('.corner').addEventListener('click', () => {
+          const sheet = curSheet();
+          sel = { r1: 0, c1: 0, r2: sheet.numRows - 1, c2: sheet.numCols - 1 };
+          renderGrid(); renderSummary();
+        });
+        // column resize
+        gridEl.querySelectorAll('[data-colrsz]').forEach(el => {
+          el.addEventListener('mousedown', (e) => {
+            e.stopPropagation(); e.preventDefault();
+            const c = +el.dataset.colrsz;
+            const sheet = curSheet();
+            const startX = e.clientX, startW = colW(sheet, c);
+            function onMove(ev) {
+              const w = Math.max(30, startW + (ev.clientX - startX));
+              sheet.colWidths[c] = w;
+              renderGrid();
+            }
+            function onUp() { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); markDirty(); }
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+          });
+        });
+        gridEl.querySelectorAll('[data-rowrsz]').forEach(el => {
+          el.addEventListener('mousedown', (e) => {
+            e.stopPropagation(); e.preventDefault();
+            const r = +el.dataset.rowrsz;
+            const sheet = curSheet();
+            const startY = e.clientY, startH = rowH(sheet, r);
+            function onMove(ev) {
+              const h = Math.max(16, startH + (ev.clientY - startY));
+              sheet.rowHeights[r] = h;
+              renderGrid();
+            }
+            function onUp() { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); markDirty(); }
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+          });
+        });
+      }
+      let fillTarget = null;
+      document.addEventListener('mouseup', () => {
+        if (dragging) { dragging = false; }
+        if (fillDragging) {
+          fillDragging = false;
+          if (fillTarget) {
+            const sheet = curSheet();
+            const b = selBounds();
+            pushUndo();
+            const srcCell = getCell(sheet, active.r, active.c, false);
+            const rr1 = Math.min(b.r1, fillTarget.r), rr2 = Math.max(b.r2, fillTarget.r);
+            const cc1 = Math.min(b.c1, fillTarget.c), cc2 = Math.max(b.c2, fillTarget.c);
+            for (let r = rr1; r <= rr2; r++) for (let c = cc1; c <= cc2; c++) {
+              if (r >= b.r1 && r <= b.r2 && c >= b.c1 && c <= b.c2) continue;
+              const dst = getCell(sheet, r, c, true);
+              Object.assign(dst, JSON.parse(JSON.stringify(srcCell || { raw: "" })));
+            }
+            sel = { r1: rr1, c1: cc1, r2: rr2, c2: cc2 };
+            markDirty();
+            fullRender();
+          }
+          fillTarget = null;
+        }
+      });
+
+      /* keyboard navigation on document (when not editing an input elsewhere) */
+      document.addEventListener('keydown', (e) => {
+        const activeEl = document.activeElement;
+        if (activeEl && (activeEl.id === 'docName' || activeEl.id === 'nameBox')) return;
+        if (editing) return;
+        if (activeEl === document.getElementById('formulaInput')) {
+          if (e.key === 'Enter') { e.preventDefault(); commitFromFormulaBar('down'); }
+          return;
+        }
+        if (e.ctrlKey || e.metaKey) {
+          if (e.key === 'z') { e.preventDefault(); doUndo(); return; }
+          if (e.key === 'y') { e.preventDefault(); doRedo(); return; }
+          if (e.key === 'b') { e.preventDefault(); toggleFormat('bold'); return; }
+          if (e.key === 'i') { e.preventDefault(); toggleFormat('italic'); return; }
+          if (e.key === 'u') { e.preventDefault(); toggleFormat('underline'); return; }
+          if (e.key === 'c') { copySelection(); return; }
+          if (e.key === 'x') { copySelection(true); return; }
+          if (e.key === 'v') { pasteSelection(); return; }
+          return;
+        }
+        switch (e.key) {
+          case 'ArrowUp': e.preventDefault(); if (e.shiftKey) { sel.r2 = Math.max(0, sel.r2 - 1); renderGrid(); renderSummary(); } else moveActive(-1, 0); break;
+          case 'ArrowDown': e.preventDefault(); if (e.shiftKey) { sel.r2 = Math.min(curSheet().numRows - 1, sel.r2 + 1); renderGrid(); renderSummary(); } else moveActive(1, 0); break;
+          case 'ArrowLeft': e.preventDefault(); if (e.shiftKey) { sel.c2 = Math.max(0, sel.c2 - 1); renderGrid(); renderSummary(); } else moveActive(0, -1); break;
+          case 'ArrowRight': e.preventDefault(); if (e.shiftKey) { sel.c2 = Math.min(curSheet().numCols - 1, sel.c2 + 1); renderGrid(); renderSummary(); } else moveActive(0, 1); break;
+          case 'Enter': e.preventDefault(); startEdit(active.r, active.c); break;
+          case 'Delete': case 'Backspace':
+            e.preventDefault(); clearSelection(); break;
+          case 'Tab': e.preventDefault(); moveActive(0, 1); break;
+          default:
+            if (e.key.length === 1 && !e.altKey) {
+              e.preventDefault();
+              startEdit(active.r, active.c, e.key);
+            }
+        }
+        if (!editing && !e.ctrlKey && !e.metaKey) { if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) { renderGrid(); renderFormulaBar(); renderSummary(); } }
+      });
+
+      function clearSelection() {
+        const sheet = curSheet();
+        const b = selBounds();
+        pushUndo();
+        for (let r = b.r1; r <= b.r2; r++) for (let c = b.c1; c <= b.c2; c++) {
+          const cell = sheet.cells[cellKey(r, c)];
+          if (cell) cell.raw = "";
+        }
+        markDirty();
+        fullRender();
+      }
+
+      let clipboard = null;
+      function copySelection(cut) {
+        const sheet = curSheet();
+        const b = selBounds();
+        const data = [];
+        for (let r = b.r1; r <= b.r2; r++) {
+          const row = [];
+          for (let c = b.c1; c <= b.c2; c++) { row.push(JSON.parse(JSON.stringify(sheet.cells[cellKey(r, c)] || { raw: "" }))); }
+          data.push(row);
+        }
+        clipboard = { data, cut, from: b };
+        if (cut) {
+          pushUndo();
+          for (let r = b.r1; r <= b.r2; r++) for (let c = b.c1; c <= b.c2; c++) { if (sheet.cells[cellKey(r, c)]) sheet.cells[cellKey(r, c)].raw = ""; }
+          markDirty(); fullRender();
+        }
+      }
+      function pasteSelection() {
+        if (!clipboard) return;
+        const sheet = curSheet();
+        pushUndo();
+        clipboard.data.forEach((row, ri) => {
+          row.forEach((srcCell, ci) => {
+            const r = active.r + ri, c = active.c + ci;
+            if (r >= sheet.numRows || c >= sheet.numCols) return;
+            const dst = getCell(sheet, r, c, true);
+            Object.assign(dst, JSON.parse(JSON.stringify(srcCell)));
+          });
+        });
+        markDirty();
+        fullRender();
+      }
+
+      /* ============================================================
+         FORMATTING ACTIONS
+      ============================================================ */
+      function applyToSelection(fn) {
+        const sheet = curSheet();
+        const b = selBounds();
+        pushUndo();
+        for (let r = b.r1; r <= b.r2; r++) for (let c = b.c1; c <= b.c2; c++) {
+          const cell = getCell(sheet, r, c, true);
+          fn(cell);
+        }
+        markDirty();
+        fullRender();
+      }
+      function toggleFormat(prop) {
+        const sheet = curSheet();
+        const anchor = getCell(sheet, active.r, active.c, false);
+        const turnOn = !(anchor && anchor[prop]);
+        applyToSelection(cell => { cell[prop] = turnOn; });
+      }
+
+      document.getElementById('btnBold').addEventListener('click', () => toggleFormat('bold'));
+      document.getElementById('btnItalic').addEventListener('click', () => toggleFormat('italic'));
+      document.getElementById('btnUnderline').addEventListener('click', () => toggleFormat('underline'));
+      document.getElementById('alignLeft').addEventListener('click', () => applyToSelection(c => c.align = 'left'));
+      document.getElementById('alignCenter').addEventListener('click', () => applyToSelection(c => c.align = 'center'));
+      document.getElementById('alignRight').addEventListener('click', () => applyToSelection(c => c.align = 'right'));
+      document.getElementById('textColor').addEventListener('input', (e) => applyToSelection(c => c.color = e.target.value));
+      document.getElementById('fillColor').addEventListener('input', (e) => applyToSelection(c => c.bg = e.target.value));
+      document.getElementById('fontFamily').addEventListener('change', (e) => applyToSelection(c => c.fontFamily = e.target.value));
+      document.getElementById('fontSize').addEventListener('change', (e) => applyToSelection(c => c.fontSize = parseInt(e.target.value, 10)));
+      document.getElementById('numFmt').addEventListener('change', (e) => applyToSelection(c => c.numFmt = e.target.value === 'general' ? undefined : e.target.value));
+      document.getElementById('decDec').addEventListener('click', () => applyToSelection(c => { c.decimals = Math.max(0, (c.decimals != null ? c.decimals : 2) - 1); }));
+      document.getElementById('incDec').addEventListener('click', () => applyToSelection(c => { c.decimals = (c.decimals != null ? c.decimals : 2) + 1; }));
+      document.getElementById('btnBorders').addEventListener('click', () => {
+        const sheet = curSheet();
+        const anchor = getCell(sheet, active.r, active.c, false);
+        const turnOn = !(anchor && anchor.border);
+        applyToSelection(cell => { cell.border = turnOn; });
+      });
+      document.getElementById('btnMerge').addEventListener('click', () => {
+        const sheet = curSheet();
+        const b = selBounds();
+        if (b.r1 === b.r2 && b.c1 === b.c2) return;
+        pushUndo();
+        sheet.merges = sheet.merges.filter(m => !(m.r1 <= b.r2 && m.r2 >= b.r1 && m.c1 <= b.c2 && m.c2 >= b.c1));
+        sheet.merges.push({ r1: b.r1, c1: b.c1, r2: b.r2, c2: b.c2 });
+        markDirty();
+        fullRender();
+      });
+      document.getElementById('btnUndo').addEventListener('click', doUndo);
+      document.getElementById('btnRedo').addEventListener('click', doRedo);
+
+      document.getElementById('insRow').addEventListener('click', () => {
+        const sheet = curSheet(); const at = selBounds().r1;
+        pushUndo();
+        shiftCells(sheet, 'row', at, 1);
+        sheet.numRows++;
+        markDirty(); fullRender();
+      });
+      document.getElementById('delRow').addEventListener('click', () => {
+        const sheet = curSheet(); const b = selBounds(); const count = b.r2 - b.r1 + 1;
+        pushUndo();
+        shiftCells(sheet, 'row', b.r1, -count);
+        sheet.numRows = Math.max(1, sheet.numRows - count);
+        setSelectionSingle(Math.min(b.r1, sheet.numRows - 1), active.c);
+        markDirty(); fullRender();
+      });
+      document.getElementById('insCol').addEventListener('click', () => {
+        const sheet = curSheet(); const at = selBounds().c1;
+        pushUndo();
+        shiftCells(sheet, 'col', at, 1);
+        sheet.numCols++;
+        markDirty(); fullRender();
+      });
+      document.getElementById('delCol').addEventListener('click', () => {
+        const sheet = curSheet(); const b = selBounds(); const count = b.c2 - b.c1 + 1;
+        pushUndo();
+        shiftCells(sheet, 'col', b.c1, -count);
+        sheet.numCols = Math.max(1, sheet.numCols - count);
+        setSelectionSingle(active.r, Math.min(b.c1, sheet.numCols - 1));
+        markDirty(); fullRender();
+      });
+      function shiftCells(sheet, axis, at, delta) {
+        const newCells = {};
+        for (const key in sheet.cells) {
+          let [r, c] = key.split('_').map(Number);
+          if (axis === 'row') {
+            if (delta > 0 && r >= at) r += delta;
+            else if (delta < 0 && r >= at) { if (r < at - delta) continue; r += delta; }
+          } else {
+            if (delta > 0 && c >= at) c += delta;
+            else if (delta < 0 && c >= at) { if (c < at - delta) continue; c += delta; }
+          }
+          newCells[cellKey(r, c)] = sheet.cells[key];
+        }
+        sheet.cells = newCells;
+      }
+      document.getElementById('sortAsc').addEventListener('click', () => sortColumn(true));
+      document.getElementById('sortDesc').addEventListener('click', () => sortColumn(false));
+      function sortColumn(asc) {
+        const sheet = curSheet();
+        const b = selBounds();
+        const c = b.c1;
+        pushUndo();
+        const rows = [];
+        for (let r = b.r1; r <= b.r2; r++) rows.push(sheet.cells[cellKey(r, c)] ? JSON.parse(JSON.stringify(sheet.cells[cellKey(r, c)])) : { raw: "" });
+        rows.sort((a, b2) => {
+          const av = isNaN(parseFloat(a.raw)) ? String(a.raw || "") : parseFloat(a.raw);
+          const bv = isNaN(parseFloat(b2.raw)) ? String(b2.raw || "") : parseFloat(b2.raw);
+          if (av < bv) return asc ? -1 : 1; if (av > bv) return asc ? 1 : -1; return 0;
+        });
+        rows.forEach((cellData, i) => { sheet.cells[cellKey(b.r1 + i, c)] = cellData; });
+        markDirty(); fullRender();
+      }
+
+      /* ============================================================
+         FORMULA BAR + NAME BOX
+      ============================================================ */
+      const formulaInput = document.getElementById('formulaInput');
+      formulaInput.addEventListener('focus', () => { if (!editing) startEdit(active.r, active.c); });
+      formulaInput.addEventListener('input', () => { editorEl.value = formulaInput.value; });
+      function commitFromFormulaBar(dir) { editorEl.value = formulaInput.value; commitEdit(dir || 'down'); }
+
+      const nameBox = document.getElementById('nameBox');
+      nameBox.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const rc = refToRC(nameBox.value.trim());
+          if (rc) { setSelectionSingle(rc.r, rc.c); fullRender(); }
+          nameBox.blur();
+        }
+      });
+
+      /* ============================================================
+         MENUS
+      ============================================================ */
+      const menubar = document.getElementById('menubar');
+      const MENUS = {
+        file: [
+          { label: 'New workbook', action: () => { if (confirm('Start a new blank workbook? Unsaved changes will be lost.')) { workbook = { name: 'Untitled workbook', sheets: [makeSheet('Sheet1')], active: 0 }; document.getElementById('docName').value = workbook.name; setSelectionSingle(0, 0); fullRender(); markDirty(); } } },
+          { sep: true },
+          { label: 'Save', shortcut: 'Ctrl+S', action: saveWorkbook },
+          { label: 'Import CSV…', action: () => document.getElementById('fileInput').click() },
+          { label: 'Export current sheet as CSV', action: exportCSV },
+        ],
+        edit: [
+          { label: 'Undo', shortcut: 'Ctrl+Z', action: doUndo },
+          { label: 'Redo', shortcut: 'Ctrl+Y', action: doRedo },
+          { sep: true },
+          { label: 'Cut', shortcut: 'Ctrl+X', action: () => copySelection(true) },
+          { label: 'Copy', shortcut: 'Ctrl+C', action: () => copySelection(false) },
+          { label: 'Paste', shortcut: 'Ctrl+V', action: pasteSelection },
+          { sep: true },
+          { label: 'Clear selection', shortcut: 'Del', action: clearSelection },
+        ],
+        insert: [
+          { label: 'Row above', action: () => document.getElementById('insRow').click() },
+          { label: 'Column left', action: () => document.getElementById('insCol').click() },
+          { sep: true },
+          { label: 'Sheet', action: () => document.getElementById('addSheet').click() },
+        ],
+        format: [
+          { label: 'Bold', shortcut: 'Ctrl+B', action: () => toggleFormat('bold') },
+          { label: 'Italic', shortcut: 'Ctrl+I', action: () => toggleFormat('italic') },
+          { label: 'Underline', shortcut: 'Ctrl+U', action: () => toggleFormat('underline') },
+          { sep: true },
+          {
+            label: 'Clear formatting', action: () => applyToSelection(cell => {
+              delete cell.bold; delete cell.italic; delete cell.underline; delete cell.color;
+              delete cell.bg; delete cell.numFmt; delete cell.align; delete cell.border; delete cell.decimals;
+            })
+          },
+          { label: 'Merge selected cells', action: () => document.getElementById('btnMerge').click() },
+        ],
+        data: [
+          { label: 'Sort A → Z (first column of selection)', action: () => sortColumn(true) },
+          { label: 'Sort Z → A (first column of selection)', action: () => sortColumn(false) },
+        ],
+        help: [
+          { label: 'Formula functions: SUM, AVERAGE, MIN, MAX, COUNT, COUNTA, IF, AND, OR, NOT, ROUND, ABS, SQRT, POWER, MOD, MEDIAN, CONCATENATE, LEN, UPPER, LOWER, TRIM, TODAY, NOW', disabled: true },
+          { label: 'Start any cell with = to enter a formula, e.g. =SUM(A1:A10)', disabled: true },
+        ]
+      };
+      function closeAllMenus() { menubar.querySelectorAll('.menu-dropdown').forEach(d => d.remove()); menubar.querySelectorAll('.menu-item').forEach(m => m.classList.remove('open')); }
+      menubar.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = item.classList.contains('open');
+          closeAllMenus();
+          if (isOpen) return;
+          item.classList.add('open');
+          const dd = document.createElement('div');
+          dd.className = 'menu-dropdown show';
+          MENUS[item.dataset.menu].forEach(entry => {
+            if (entry.sep) { const s = document.createElement('div'); s.className = 'menu-sep'; dd.appendChild(s); return; }
+            const row = document.createElement('div');
+            row.className = 'menu-row' + (entry.disabled ? ' disabled' : '');
+            row.innerHTML = `<span>${entry.label}</span>${entry.shortcut ? `<span class="shortcut">${entry.shortcut}</span>` : ''}`;
+            if (!entry.disabled) row.addEventListener('click', () => { closeAllMenus(); entry.action(); });
+            dd.appendChild(row);
+          });
+          item.appendChild(dd);
+        });
+      });
+      document.addEventListener('click', closeAllMenus);
+
+      /* ============================================================
+         SHEETS / TOOLBAR TOP
+      ============================================================ */
+      document.getElementById('addSheet').addEventListener('click', () => {
+        pushUndo();
+        const n = workbook.sheets.length + 1;
+        workbook.sheets.push(makeSheet('Sheet' + n));
+        workbook.active = workbook.sheets.length - 1;
+        setSelectionSingle(0, 0);
+        fullRender();
+        markDirty();
+      });
+      document.getElementById('docName').addEventListener('input', (e) => { workbook.name = e.target.value; markDirty(); });
+
+      /* ============================================================
+         CSV IMPORT / EXPORT
+      ============================================================ */
+      function exportCSV() {
+        const sheet = curSheet();
+        let lines = [];
+        for (let r = 0; r < sheet.numRows; r++) {
+          const row = [];
+          let anyContent = false;
+          for (let c = 0; c < sheet.numCols; c++) {
+            const cell = sheet.cells[cellKey(r, c)];
+            let v = "";
+            if (cell) {
+              v = (cell.computed !== undefined) ? cell.computed : cell.raw;
+              if (v && typeof v === 'object' && '__error' in v) v = v.__error;
+              anyContent = true;
+            }
+            v = String(v == null ? "" : v);
+            if (/[",\n]/.test(v)) v = '"' + v.replace(/"/g, '""') + '"';
+            row.push(v);
+          }
+          lines.push(row.join(','));
+        }
+        while (lines.length && lines[lines.length - 1].split(',').every(v => v === '')) lines.pop();
+        const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = (sheet.name || 'sheet') + '.csv';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+      document.getElementById('btnExport').addEventListener('click', exportCSV);
+      document.getElementById('btnImport').addEventListener('click', () => document.getElementById('fileInput').click());
+      document.getElementById('fileInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          pushUndo();
+          const text = reader.result;
+          const rows = parseCSV(text);
+          const sheet = makeSheet(file.name.replace(/\.csv$/i, '') || 'Imported');
+          sheet.numRows = Math.max(DEFAULT_ROWS, rows.length + 5);
+          sheet.numCols = Math.max(DEFAULT_COLS, (rows[0] ? rows[0].length : 0) + 2);
+          rows.forEach((row, r) => {
+            row.forEach((val, c) => {
+              if (val !== "") sheet.cells[cellKey(r, c)] = { raw: val };
+            });
+          });
+          workbook.sheets.push(sheet);
+          workbook.active = workbook.sheets.length - 1;
+          setSelectionSingle(0, 0);
+          fullRender();
+          markDirty();
+        };
+        reader.readAsText(file);
+        e.target.value = "";
+      });
+      function parseCSV(text) {
+        const rows = []; let row = []; let field = ""; let inQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+          const ch = text[i];
+          if (inQuotes) {
+            if (ch === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else inQuotes = false; }
+            else field += ch;
+          } else {
+            if (ch === '"') inQuotes = true;
+            else if (ch === ',') { row.push(field); field = ""; }
+            else if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ""; }
+            else if (ch === '\r') { /* skip */ }
+            else field += ch;
+          }
+        }
+        if (field !== "" || row.length) { row.push(field); rows.push(row); }
+        return rows;
+      }
+
+      /* ============================================================
+         PERSISTENCE (window.storage - personal, per user)
+      ============================================================ */
+      function markDirty() {
+        dirty = true;
+        document.getElementById('saveStatus').textContent = 'Unsaved changes';
+      }
+      async function saveWorkbook() {
+        try {
+          if (window.storage) {
+            await window.storage.set('sheetworks-workbook', JSON.stringify(workbook), false);
+          }
+          dirty = false;
+          document.getElementById('saveStatus').textContent = 'All changes saved';
+        } catch (err) {
+          document.getElementById('saveStatus').textContent = 'Save failed';
+        }
+      }
+      document.getElementById('btnSave').addEventListener('click', saveWorkbook);
+      async function loadWorkbook() {
+        try {
+          if (window.storage) {
+            const res = await window.storage.get('sheetworks-workbook', false);
+            if (res && res.value) {
+              workbook = JSON.parse(res.value);
+              document.getElementById('docName').value = workbook.name || 'Untitled workbook';
+            }
+          }
+        } catch (err) { /* no saved workbook yet */ }
+        clampSelectionToSheet();
+        fullRender();
+      }
+
+      /* ============================================================
+         SEED DEMO CONTENT (only if no saved workbook)
+      ============================================================ */
+    
+      function seedDemo() {
+        const s = curSheet();
+        // s.cells['0_0'] = { raw: 'Item', bold: true, bg: '#F0F2F5' };
+        // s.cells['0_1'] = { raw: 'Qty', bold: true, bg: '#F0F2F5' };
+        // s.cells['0_2'] = { raw: 'Unit Price', bold: true, bg: '#F0F2F5' };
+        // s.cells['0_3'] = { raw: 'Total', bold: true, bg: '#F0F2F5' };
+        // const items = [['Widgets', '4', '2.5'], ['Gadgets', '2', '15'], ['Bolts', '100', '0.05']];
+        // items.forEach((it, i) => {
+        //   s.cells[cellKey(i + 1, 0)] = { raw: it[0] };
+        //   s.cells[cellKey(i + 1, 1)] = { raw: it[1] };
+        //   s.cells[cellKey(i + 1, 2)] = { raw: it[2], numFmt: 'currency' };
+        //   s.cells[cellKey(i + 1, 3)] = { raw: '=B' + (i + 2) + '*C' + (i + 2), numFmt: 'currency' };
+        // });
+        // s.cells['5_2'] = { raw: 'Total', bold: true, align: 'right' };
+        // s.cells['5_3'] = { raw: '=SUM(D2:D4)', bold: true, numFmt: 'currency' };
+      }
+
+      /* ============================================================
+         INIT
+      ============================================================ */
+      (async function init() {
+        let hadSaved = false;
+        try {
+          if (window.storage) {
+            const res = await window.storage.get('sheetworks-workbook', false);
+            if (res && res.value) { workbook = JSON.parse(res.value); hadSaved = true; document.getElementById('docName').value = workbook.name || 'Untitled workbook'; }
+          }
+        } catch (e) { }
+        if (!hadSaved) { seedDemo(); }
+        clampSelectionToSheet();
+        fullRender();
+        document.getElementById('saveStatus').textContent = hadSaved ? 'All changes saved' : 'Unsaved changes';
+      })();
+
+    })();
+  </script>
+</body>
+
+</html>
